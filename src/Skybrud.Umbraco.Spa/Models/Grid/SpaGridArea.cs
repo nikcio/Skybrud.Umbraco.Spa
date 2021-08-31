@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Skybrud.Umbraco.GridData;
+using Skybrud.Umbraco.GridData.Models;
 
 namespace Skybrud.Umbraco.Spa.Models.Grid {
 

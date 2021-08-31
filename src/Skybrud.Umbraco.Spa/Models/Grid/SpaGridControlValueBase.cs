@@ -1,7 +1,10 @@
 ﻿using Skybrud.Umbraco.GridData;
-using Skybrud.Umbraco.GridData.Interfaces;
+using Skybrud.Umbraco.GridData.Models;
+using Skybrud.Umbraco.GridData.Models.Values;
+using System.IO;
 
-namespace Skybrud.Umbraco.Spa.Models.Grid {
+namespace Skybrud.Umbraco.Spa.Models.Grid
+{
 
     /// <summary>
     /// This class serves as a special base class that can be used in a SPA context, as classes inheriting from class
@@ -51,6 +54,17 @@ namespace Skybrud.Umbraco.Spa.Models.Grid {
         /// <returns>An instance of <see cref="SpaGridControl"/>.</returns>
         public virtual SpaGridControl GetControlForSpa() {
             return new SpaGridControl(this, Control.Editor.Alias);
+        }
+
+        public void WriteSearchableText(GridContext context, TextWriter writer)
+        {
+            return;
+        }
+
+        /// <inheritdoc/>
+        public string GetSearchableText(GridContext context)
+        {
+            return string.Empty;
         }
 
         #endregion

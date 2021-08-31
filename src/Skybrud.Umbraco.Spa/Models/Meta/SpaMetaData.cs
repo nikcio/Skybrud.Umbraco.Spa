@@ -1,19 +1,20 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Skybrud.Umbraco.Spa.Extensions;
 using Skybrud.Umbraco.Spa.Json.Converters;
 using Skybrud.Umbraco.Spa.Models.Meta.Attributes;
 using Skybrud.Umbraco.Spa.Models.Meta.OpenGraph;
 using Skybrud.Umbraco.Spa.Models.Meta.Twitter;
-using Umbraco.Core;
-using Umbraco.Core.Models.PublishedContent;
+using System.Collections.Generic;
+using System.Linq;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Web;
 
 // ReSharper disable UnusedParameter.Local
 
-namespace Skybrud.Umbraco.Spa.Models.Meta {
-    
+namespace Skybrud.Umbraco.Spa.Models.Meta
+{
+
     /// <summary>
     /// Class representing meta data about a page in Umbraco.
     /// 
@@ -131,12 +132,12 @@ namespace Skybrud.Umbraco.Spa.Models.Meta {
         /// </summary>
         /// <param name="site">The site of the current page.</param>
         /// <param name="content">The current page.</param>
-        public SpaMetaData(SpaSiteModel site, IPublishedContent content) {
+        public SpaMetaData(SpaSiteModel site, IPublishedContent content, IUmbracoContext umbracoContext) {
 
             Content = content;
 
             HtmlAttributes = new SpaMetaHtmlAttributeList {
-                Language = content.GetCultureInfo().ToString()
+                Language = content.GetCultureInfo(umbracoContext).ToString()
             };
 
             HeadAttributes = new SpaMetaAttributeList();

@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web;
+using System.Collections.Generic;
+using System.Linq;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Extensions;
 
-namespace Skybrud.Umbraco.Spa.Models.Meta.OpenGraph {
+namespace Skybrud.Umbraco.Spa.Models.Meta.OpenGraph
+{
 
     /// <summary>
     /// Class representing the Open Graph properties of a page.

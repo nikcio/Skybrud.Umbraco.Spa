@@ -1,17 +1,18 @@
-﻿using System;
-using System.Reflection;
+﻿using Microsoft.AspNetCore.Html;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Skybrud.Essentials.Strings;
-using Skybrud.Umbraco.GridData;
-using Skybrud.Umbraco.Spa.Json.Converters;
-using System.Web;
 using Skybrud.Essentials.Json.Converters;
-using Umbraco.Core.Models.PublishedContent;
+using Skybrud.Essentials.Strings;
+using Skybrud.Umbraco.GridData.Models;
+using Skybrud.Umbraco.Spa.Json.Converters;
+using System;
+using System.Reflection;
+using Umbraco.Cms.Core.Templates;
 
 #pragma warning disable 1591
 
-namespace Skybrud.Umbraco.Spa.Json.Resolvers {
+namespace Skybrud.Umbraco.Spa.Json.Resolvers
+{
 
     public class SpaPublishedContentContractResolver : DefaultContractResolver {
 
@@ -23,7 +24,7 @@ namespace Skybrud.Umbraco.Spa.Json.Resolvers {
 
         #region Constructors
 
-        public SpaPublishedContentContractResolver() : this(new SpaGridJsonConverterBase()) { }
+        public SpaPublishedContentContractResolver(HtmlLocalLinkParser htmlLocalLinkParser) : this(new SpaGridJsonConverterBase(htmlLocalLinkParser)) { }
 
         public SpaPublishedContentContractResolver(SpaGridJsonConverterBase gridConverter) {
             GridConverter = gridConverter;

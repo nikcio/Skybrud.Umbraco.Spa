@@ -1,8 +1,11 @@
 ﻿using System.Globalization;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Web;
+using Umbraco.Cms.Web.Common.UmbracoContext;
+using Umbraco.Extensions;
 
-namespace Skybrud.Umbraco.Spa.Extensions {
+namespace Skybrud.Umbraco.Spa.Extensions
+{
 
     /// <summary>
     /// Static class with various extension methods for the SPA.
@@ -13,6 +16,7 @@ namespace Skybrud.Umbraco.Spa.Extensions {
         /// Gets the <see cref="CultureInfo"/> of the specified <paramref name="content"/> item.
         /// </summary>
         /// <param name="content">The content item to get the culture item for.</param>
+        /// <param name="umbracoContext">The current UmbracoContext</param>
         /// <returns>An instance of <see cref="CultureInfo"/>.</returns>
         /// <see>
         ///     <cref>https://docs.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.getcultureinfo</cref>
@@ -33,10 +37,10 @@ namespace Skybrud.Umbraco.Spa.Extensions {
         /// has been found or the top of the tree has been reached. If none of the content items along the path specify
         /// a culture, the default culture configured in Umbraco (typically <c>en-US</c>) will be used as fallback.</para>
         /// </remarks>
-        public static CultureInfo GetCultureInfo(this IPublishedContent content) {
-            if (content == null) return CultureInfo.GetCultureInfo(global::Umbraco.Web.Composing.Current.UmbracoContext.Domains.DefaultCulture);
+        public static CultureInfo GetCultureInfo(this IPublishedContent content, IUmbracoContext umbracoContext) {
+            if (content == null) return CultureInfo.GetCultureInfo(umbracoContext.Domains.DefaultCulture);
             string code = content.GetCultureFromDomains();
-            return string.IsNullOrWhiteSpace(code) ? GetCultureInfo(content.Parent) : CultureInfo.GetCultureInfo(code);
+            return string.IsNullOrWhiteSpace(code) ? GetCultureInfo(content.Parent, umbracoContext) : CultureInfo.GetCultureInfo(code);
         }
 
     }

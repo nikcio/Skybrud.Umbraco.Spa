@@ -1,10 +1,11 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Skybrud.Umbraco.Spa.Models.Navigation;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web;
+using System;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Extensions;
 
-namespace Skybrud.Umbraco.Spa.Models {
+namespace Skybrud.Umbraco.Spa.Models
+{
 
     /// <summary>
     /// Class representing the base model of a SPA site.
@@ -83,7 +84,7 @@ namespace Skybrud.Umbraco.Spa.Models {
             Site = site ?? throw new ArgumentNullException(nameof(site));
             Id = site.Id;
             Name = site.Value<string>("siteName");
-            Url = site.Url;
+            Url = site.Url();
 
         }
 
@@ -103,7 +104,7 @@ namespace Skybrud.Umbraco.Spa.Models {
             // Culture
             Culture = culture ?? site;
             Name = Culture.Value<string>("siteName");
-            Url = Culture.Url;
+            Url = Culture.Url();
 
         }
 

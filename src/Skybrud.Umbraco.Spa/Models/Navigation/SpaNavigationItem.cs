@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Skybrud.Umbraco.Spa.Constants;
 using Skybrud.Umbraco.Spa.Extensions;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web;
+using System.Collections.Generic;
+using System.Linq;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Web;
+using Umbraco.Extensions;
 
-namespace Skybrud.Umbraco.Spa.Models.Navigation {
+namespace Skybrud.Umbraco.Spa.Models.Navigation
+{
 
     /// <summary>
     /// Class representing an item in the navigation.
@@ -77,21 +79,22 @@ namespace Skybrud.Umbraco.Spa.Models.Navigation {
         /// Initializes a new instance based on the specified <paramref name="content"/> item.
         /// </summary>
         /// <param name="content">The <see cref="IPublishedContent"/> the item should be based on.</param>
+        /// <param name="umbracoContext"></param>
         /// <param name="levels">The maximal level to be returned.</param>
         /// <param name="levelcount">The current level in the content tree.</param>
-        protected SpaNavigationItem(IPublishedContent content, int levels = 1, int levelcount = 1) {
+        protected SpaNavigationItem(IPublishedContent content, IUmbracoContext umbracoContext, int levels = 1, int levelcount = 1) {
 
             IPublishedContent[] children = content.Children(x => x.TemplateId > 0 && x.IsVisible()).ToArray();
 
             Id = content.Id;
             Title = content.Name;
-            Url = content.Url;
+            Url = content.Url();
             ParentId = content.Parent?.Id ?? -1;
             Template = content.GetTemplateAlias();
-            Culture = content.GetCultureInfo().Name;
+            Culture = content.GetCultureInfo(umbracoContext).Name;
             HasChildren = children.Any();
             IsVisible = content.Value<bool>(SkyConstants.Properties.UmbracoNaviHide) == false;
-            Children = children.Any() && levels > levelcount ? children.Select(x => GetItem(x, levels, levelcount + 1)).ToArray() : new SpaNavigationItem[0];
+            Children = children.Any() && levels > levelcount ? children.Select(x => GetItem(x, umbracoContext, levels, levelcount + 1)).ToArray() : new SpaNavigationItem[0];
 
         }
 
@@ -106,8 +109,8 @@ namespace Skybrud.Umbraco.Spa.Models.Navigation {
         /// <param name="levels">The maximal level to be returned.</param>
         /// <param name="levelcount">The current level in the content tree.</param>
         /// <returns>An instance of <see cref="SpaNavigationItem"/>.</returns>
-        public static SpaNavigationItem GetItem(IPublishedContent content, int levels = 1, int levelcount = 1) {
-            return content == null ? null : new SpaNavigationItem(content, levels, levelcount);
+        public static SpaNavigationItem GetItem(IPublishedContent content, IUmbracoContext umbracoContext, int levels = 1, int levelcount = 1) {
+            return content == null ? null : new SpaNavigationItem(content, umbracoContext, levels, levelcount);
         }
 
         /// <summary>
@@ -117,10 +120,10 @@ namespace Skybrud.Umbraco.Spa.Models.Navigation {
         /// <param name="levels">The maximal level to be returned.</param>
         /// <param name="levelcount">The current level in the content tree.</param>
         /// <returns>A collection of <see cref="SpaNavigationItem"/>.</returns>
-        public static IEnumerable<SpaNavigationItem> GetItems(IEnumerable<IPublishedContent> content, int levels = 1, int levelcount = 1) {
+        public static IEnumerable<SpaNavigationItem> GetItems(IEnumerable<IPublishedContent> content, IUmbracoContext umbracoContext, int levels = 1, int levelcount = 1) {
             if (content == null) return null;
             levelcount++;
-            return content.Select(x => GetItem(x, levels, levelcount)).Where(x => x.IsVisible);
+            return content.Select(x => GetItem(x, umbracoContext, levels, levelcount)).Where(x => x.IsVisible);
         }
 
         #endregion

@@ -1,8 +1,9 @@
-﻿using System.Web.Http.Filters;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 
 // ReSharper disable InconsistentNaming
 
-namespace Skybrud.Umbraco.Spa.Attributes {
+namespace Skybrud.Umbraco.Spa.Attributes
+{
 
     /// <summary>
     /// Attribute used on WebAPI controllers for setting the <c>Access-Control-Allow-Origin</c> HTTP header to <see cref="Value"/>.
@@ -30,8 +31,8 @@ namespace Skybrud.Umbraco.Spa.Attributes {
         }
 
         /// <inheritdoc />
-        public override void OnActionExecuted(HttpActionExecutedContext context) {
-            context.Response?.Headers.Add("Access-Control-Allow-Origin", Value);
+        public override void OnActionExecuted(ActionExecutedContext context) {
+            context.HttpContext.Response?.Headers.Add("Access-Control-Allow-Origin", Value);
         }
 
     }

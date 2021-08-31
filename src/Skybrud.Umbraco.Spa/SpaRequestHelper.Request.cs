@@ -3,10 +3,12 @@ using Skybrud.Essentials.Common;
 using Skybrud.Umbraco.Spa.Json.Converters;
 using Skybrud.Umbraco.Spa.Json.Resolvers;
 using Skybrud.Umbraco.Spa.Models;
-using Umbraco.Core.Models;
-using Umbraco.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Templates;
 
-namespace Skybrud.Umbraco.Spa {
+namespace Skybrud.Umbraco.Spa
+{
 
     public partial class SpaRequestHelper {
         
@@ -72,9 +74,9 @@ namespace Skybrud.Umbraco.Spa {
         /// </summary>
         /// <param name="data">The data to be serialized.</param>
         /// <returns>A JSON string.</returns>
-        protected virtual string Serialize(object data) {
+        protected virtual string Serialize(object data, HtmlLocalLinkParser htmlLocalLinkParser) {
 
-            SpaGridJsonConverterBase gridConverter = GridJsonConverter ?? new SpaGridJsonConverterBase();
+            SpaGridJsonConverterBase gridConverter = GridJsonConverter ?? new SpaGridJsonConverterBase(htmlLocalLinkParser);
 
             return JsonConvert.SerializeObject(data, Formatting.None, new JsonSerializerSettings {
                 ContractResolver = new SpaPublishedContentContractResolver(gridConverter)

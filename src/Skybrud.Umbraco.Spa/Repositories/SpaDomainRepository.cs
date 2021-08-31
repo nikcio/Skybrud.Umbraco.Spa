@@ -1,21 +1,22 @@
-﻿using System;
+﻿using Skybrud.Umbraco.Spa.Models;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Skybrud.Umbraco.Spa.Models;
-using Umbraco.Core;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web.PublishedCache;
-using Umbraco.Web.Routing;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.PublishedCache;
+using Umbraco.Cms.Core.Routing;
+using Umbraco.Extensions;
 
-namespace Skybrud.Umbraco.Spa.Repositories {
-    
+namespace Skybrud.Umbraco.Spa.Repositories
+{
+
     public class SpaDomainRepository {
         
         private readonly IPublishedSnapshotAccessor _publishedSnapshotAccessor;
-        private readonly ISiteDomainHelper _siteDomainHelper;
+        private readonly ISiteDomainMapper _siteDomainHelper;
 
-        public SpaDomainRepository(IPublishedSnapshotAccessor publishedSnapshotAccessor, ISiteDomainHelper siteDomainHelper) {
+        public SpaDomainRepository(IPublishedSnapshotAccessor publishedSnapshotAccessor, ISiteDomainMapper siteDomainHelper) {
             _publishedSnapshotAccessor = publishedSnapshotAccessor;
             _siteDomainHelper = siteDomainHelper;
         }
@@ -26,14 +27,15 @@ namespace Skybrud.Umbraco.Spa.Repositories {
             if (nodeId <= 0) return null;
 
             // get the domains on that node
-            var domains = _publishedSnapshotAccessor.PublishedSnapshot.Domains.GetAssigned(nodeId).ToArray();
+            _publishedSnapshotAccessor.TryGetPublishedSnapshot(out var publishedSnapshot);
+            var domains = publishedSnapshot.Domains.GetAssigned(nodeId).ToArray();
 
             // none?
             if (domains.Length == 0) return null;
 
             // else filter
             // it could be that none apply (due to culture)
-            return SelectDomain(domains, current, culture, _publishedSnapshotAccessor.PublishedSnapshot.Domains.DefaultCulture, _siteDomainHelper.MapDomain);
+            return SelectDomain(domains, current, culture, publishedSnapshot.Domains.DefaultCulture, _siteDomainHelper.MapDomain);
 
         }
 
@@ -59,6 +61,8 @@ namespace Skybrud.Umbraco.Spa.Repositories {
             // need to find the assigned domains of the requested node (or it's ancestor) so we
             // can determine the sitenode
 
+            _publishedSnapshotAccessor.TryGetPublishedSnapshot(out var publishedSnapshot);
+
             if (request.Arguments.PageId > 0) {
 
                 // If a page ID was specifically specified for the request, it may mean that we're
@@ -68,12 +72,12 @@ namespace Skybrud.Umbraco.Spa.Repositories {
 
                 // TODO: Look at the "siteId" parameter as well (may be relevant for virtual content etc.)
 
-                IPublishedContent c = _publishedSnapshotAccessor.PublishedSnapshot.Content.GetById(request.Arguments.PageId);
+                IPublishedContent c = publishedSnapshot.Content.GetById(request.Arguments.PageId);
 
                 if (c != null) {
                     request.Domain = DomainForNode(c, null, request.Arguments.Culture);
                     if (request.Domain != null) {
-                        request.CultureInfo = request.Domain.Culture;
+                        request.CultureInfo = CultureInfo.GetCultureInfo(request.Domain.Culture);
                         return true;
                     }
                 }
@@ -82,7 +86,7 @@ namespace Skybrud.Umbraco.Spa.Repositories {
 
             }
 
-            var domainsCache = _publishedSnapshotAccessor.PublishedSnapshot.Domains;
+            var domainsCache =  publishedSnapshot.Domains;
             var domains = domainsCache.GetAll(includeWildcards: false).ToList();
 
             // determines whether a domain corresponds to a published document, since some
@@ -92,18 +96,18 @@ namespace Skybrud.Umbraco.Spa.Repositories {
             bool IsPublishedContentDomain(Domain domain) {
 
                 // just get it from content cache - optimize there, not here
-                var domainDocument = _publishedSnapshotAccessor.PublishedSnapshot.Content.GetById(domain.ContentId);
+                var domainDocument = publishedSnapshot.Content.GetById(domain.ContentId);
 
                 // not published - at all
                 if (domainDocument == null)
                     return false;
 
                 // invariant - always published
-                if (!domainDocument.ContentType.VariesByCulture())
+                if (domainDocument.ContentType.Variations == 0)
                     return true;
 
                 // variant, ensure that the culture corresponding to the domain's language is published
-                return domainDocument.Cultures.ContainsKey(domain.Culture.Name);
+                return domainDocument.Cultures.ContainsKey(domain.Culture);
 
             }
 
@@ -117,7 +121,7 @@ namespace Skybrud.Umbraco.Spa.Repositories {
             // handle domain - always has a contentId and a culture
             if (domainAndUri != null) {
                 request.Domain = domainAndUri;
-                request.CultureInfo = domainAndUri.Culture;
+                request.CultureInfo = CultureInfo.GetCultureInfo(domainAndUri.Culture);
 
             } else {
                 request.CultureInfo = defaultCulture == null ? CultureInfo.CurrentUICulture : new CultureInfo(defaultCulture);
@@ -211,14 +215,14 @@ namespace Skybrud.Umbraco.Spa.Repositories {
 
             if (culture != null) // try the supplied culture
             {
-                var cultureDomains = domainsAndUris.Where(x => x.Culture.Name.InvariantEquals(culture)).ToList();
-                if (cultureDomains.Count > 0) return cultureDomains;
+                var cultureDomains = domainsAndUris.Where(x => x.Culture.InvariantEquals(culture)).ToList();
+                if (cultureDomains.Count() > 0) return cultureDomains;
             }
 
             if (defaultCulture != null) // try the defaultCulture culture
             {
-                var cultureDomains = domainsAndUris.Where(x => x.Culture.Name.InvariantEquals(defaultCulture)).ToList();
-                if (cultureDomains.Count > 0) return cultureDomains;
+                var cultureDomains = domainsAndUris.Where(x => x.Culture.InvariantEquals(defaultCulture)).ToList();
+                if (cultureDomains.Count() > 0) return cultureDomains;
             }
 
             return null;
@@ -232,13 +236,13 @@ namespace Skybrud.Umbraco.Spa.Repositories {
 
             if (culture != null) // try the supplied culture
             {
-                domainAndUri = domainsAndUris.FirstOrDefault(x => x.Culture.Name.InvariantEquals(culture));
+                domainAndUri = domainsAndUris.FirstOrDefault(x => x.Culture.InvariantEquals(culture));
                 if (domainAndUri != null) return domainAndUri;
             }
 
             if (defaultCulture != null) // try the defaultCulture culture
             {
-                domainAndUri = domainsAndUris.FirstOrDefault(x => x.Culture.Name.InvariantEquals(defaultCulture));
+                domainAndUri = domainsAndUris.FirstOrDefault(x => x.Culture.InvariantEquals(defaultCulture));
                 if (domainAndUri != null) return domainAndUri;
             }
 

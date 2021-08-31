@@ -1,8 +1,9 @@
 ﻿using System;
-using Umbraco.Core.Cache;
+using Umbraco.Cms.Core.Cache;
 
-namespace Skybrud.Umbraco.Spa.Services {
-    
+namespace Skybrud.Umbraco.Spa.Services
+{
+
     /// <summary>
     /// Base implementation of a cache service for the SPA. 
     /// </summary>

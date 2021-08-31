@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
-using System.Web;
-using Newtonsoft.Json;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web.Routing;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Routing;
 
-namespace Skybrud.Umbraco.Spa.Models {
+namespace Skybrud.Umbraco.Spa.Models
+{
 
     /// <summary>
     /// Class representing a request via the <c>GetData</c> endpoint in the SPA API.
@@ -20,18 +21,23 @@ namespace Skybrud.Umbraco.Spa.Models {
         /// <summary>
         /// Gets a reference to the current SPA API request.
         /// </summary>
-        public static SpaRequest Current {
-            get {
-                if (System.Web.HttpContext.Current == null) return null;
-                return System.Web.HttpContext.Current.Items["SpaApiRequest"] as SpaRequest;
-            }
-            set => System.Web.HttpContext.Current.Items["SpaApiRequest"] = value;
+        public static SpaRequest GetCurrent(HttpContext httpContext) {
+            if (httpContext == null) return null;
+            return httpContext.Items["SpaApiRequest"] as SpaRequest;
+        }
+
+        /// <summary>
+        /// Sets a reference to the current SPA API request.
+        /// </summary>
+        public static void SetCurrent(HttpContext httpContext, object value)
+        {
+            httpContext.Items["SpaApiRequest"] = value;
         }
 
         /// <summary>
         /// Gets a reference to the HTTP context of the request.
         /// </summary>
-        public HttpContextBase HttpContext { get; }
+        public HttpContext HttpContext { get; }
 
         /// <summary>
         /// Gets the options/arguments determined from the current request.
@@ -155,7 +161,7 @@ namespace Skybrud.Umbraco.Spa.Models {
         /// </summary>
         [JsonConstructor]
         public SpaRequest() {
-            HttpContext = new HttpContextWrapper(System.Web.HttpContext.Current);
+            HttpContext = new DefaultHttpContext();
             Stopwatch = Stopwatch.StartNew();
         }
 
@@ -163,17 +169,7 @@ namespace Skybrud.Umbraco.Spa.Models {
         /// Initializes a new a instance based on the specified <paramref name="context"/>.
         /// </summary>
         /// <param name="context">The HTTP context of the current request.</param>
-        public SpaRequest(HttpContext context) {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            HttpContext = new HttpContextWrapper(context);
-            Stopwatch = Stopwatch.StartNew();
-        }
-
-        /// <summary>
-        /// Initializes a new a instance based on the specified <paramref name="context"/>.
-        /// </summary>
-        /// <param name="context">The HTTP context of the current request.</param>
-        public SpaRequest(HttpContextWrapper context) {
+        public SpaRequest(DefaultHttpContext context) {
             HttpContext = context ?? throw new ArgumentNullException(nameof(context));
             Stopwatch = Stopwatch.StartNew();
         }
@@ -182,7 +178,7 @@ namespace Skybrud.Umbraco.Spa.Models {
         /// Initializes a new a instance based on the specified <paramref name="context"/>.
         /// </summary>
         /// <param name="context">The HTTP context of the current request.</param>
-        public SpaRequest(HttpContextBase context) {
+        public SpaRequest(HttpContext context) {
             HttpContext = context ?? throw new ArgumentNullException(nameof(context));
             Stopwatch = Stopwatch.StartNew();
         }

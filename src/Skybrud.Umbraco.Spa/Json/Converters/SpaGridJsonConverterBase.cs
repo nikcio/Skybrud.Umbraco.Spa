@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Skybrud.Umbraco.GridData;
-using Skybrud.Umbraco.GridData.Values;
+using Skybrud.Umbraco.GridData.Models;
+using Skybrud.Umbraco.GridData.Models.Values;
 using Skybrud.Umbraco.Spa.Models.Grid;
-using Umbraco.Web.Composing;
-using Umbraco.Web.Templates;
+using System;
+using System.Collections.Generic;
+using Umbraco.Cms.Core.Templates;
 
 #pragma warning disable 1591
 
-namespace Skybrud.Umbraco.Spa.Json.Converters {
+namespace Skybrud.Umbraco.Spa.Json.Converters
+{
 
     public class SpaGridJsonConverterBase : JsonConverter {
 
@@ -21,13 +21,14 @@ namespace Skybrud.Umbraco.Spa.Json.Converters {
         public override bool CanWrite => true;
 
         public bool SkipInvalidControls { get; set; }
+        public HtmlLocalLinkParser HtmlLocalLinkParser { get; }
 
         #endregion
-
         #region Constructors
 
-        public SpaGridJsonConverterBase() {
+        public SpaGridJsonConverterBase(HtmlLocalLinkParser htmlLocalLinkParser) {
             SkipInvalidControls = true;
+            HtmlLocalLinkParser = htmlLocalLinkParser;
         }
 
         #endregion
@@ -115,7 +116,7 @@ namespace Skybrud.Umbraco.Spa.Json.Converters {
             return new SpaGridEditor(editor.Alias);
         }
         protected virtual string GetRteParsedValue(GridControlRichTextValue value) {
-            return value == null ? null : TemplateUtilities.ParseInternalLinks(value.Value, Current.UmbracoContext.UrlProvider);
+            return value == null ? null : HtmlLocalLinkParser.EnsureInternalLinks(value.Value);
         }
 
         #endregion

@@ -1,14 +1,23 @@
-﻿using System;
+﻿using Skybrud.Umbraco.Spa.Models;
+using Skybrud.WebApi.Json.Meta;
+using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using Skybrud.Umbraco.Spa.Models;
-using Skybrud.WebApi.Json.Meta;
+using Umbraco.Cms.Core.Templates;
 
-namespace Skybrud.Umbraco.Spa {
+namespace Skybrud.Umbraco.Spa
+{
 
     public abstract partial class SpaRequestHelper {
+        public HtmlLocalLinkParser HtmlLocalLinkParser { get; }
+
+        public SpaRequestHelper(HtmlLocalLinkParser htmlLocalLinkParser)
+        {
+            HtmlLocalLinkParser = htmlLocalLinkParser;
+        }
 
         #region Text
 
@@ -101,8 +110,8 @@ namespace Skybrud.Umbraco.Spa {
 
             sb.AppendLine("<h3>HTTP Request</h3>");
             sb.AppendLine("<table>\n");
-            sb.AppendLine("<tr><th>Remote Address</th><td>" + request.HttpContext.Request.ServerVariables["REMOTE_ADDR"] + "</td></tr>");
-            sb.AppendLine("<tr><th>User Agent</th><td>" + request.HttpContext.Request.UserAgent + "</td></tr>");
+            sb.AppendLine("<tr><th>Remote Address</th><td>" + request.HttpContext.Connection.RemoteIpAddress + "</td></tr>");
+            sb.AppendLine("<tr><th>User Agent</th><td>" + request.HttpContext.Request.Headers["User-Agent"].ToString() + "</td></tr>");
             sb.AppendLine("<tr><th>Accept Header</th><td>" + request.HttpContext.Request.Headers["Accept"] + "</td></tr>");
             sb.AppendLine("</table>");
 
@@ -114,7 +123,7 @@ namespace Skybrud.Umbraco.Spa {
                 sb.AppendLine("<tr><th>Page ID</th><td>" + request.Arguments.PageId + "</td></tr>");
                 sb.AppendLine("<tr><th>Site ID</th><td>" + request.Arguments.SiteId + "</td></tr>");
                 sb.AppendLine("<tr><th>URL</th><td>" + request.Arguments.Url + "</td></tr>");
-                sb.AppendLine("<tr><th>Query String</th><td>" + request.Arguments.QueryString + "</td></tr>");
+                sb.AppendLine("<tr><th>Query String</th><td>" + request.Arguments.Query + "</td></tr>");
                 sb.AppendLine("<tr><th>Preview</th><td>" + request.Arguments.IsPreview + "</td></tr>");
                 sb.AppendLine("<tr><th>Protocol</th><td>" + request.Arguments.Protocol + "</td></tr>");
                 sb.AppendLine("<tr><th>Host name</th><td>" + request.Arguments.HostName + "</td></tr>");
@@ -128,8 +137,8 @@ namespace Skybrud.Umbraco.Spa {
 
             sb.AppendLine("<h3>Config</h3>");
             sb.AppendLine("<table>\n");
-            sb.AppendLine("<tr><th>IsDebuggingEnabled</th><td>" + request.HttpContext.IsDebuggingEnabled + "</td></tr>");
-            sb.AppendLine("<tr><th>IsCustomErrorEnabled</th><td>" + request.HttpContext.IsCustomErrorEnabled + "</td></tr>");
+            sb.AppendLine("<tr><th>IsDebuggingEnabled</th><td>" + Debugger.IsAttached + "</td></tr>");
+            //sb.AppendLine("<tr><th>IsCustomErrorEnabled</th><td>" + request.HttpContext.IsCustomErrorEnabled + "</td></tr>"); //TODO
             sb.AppendLine("</table>");
 
             while (exception != null) {
@@ -181,7 +190,7 @@ namespace Skybrud.Umbraco.Spa {
 
             // Create a new response
             return new HttpResponseMessage(statusCode) {
-                Content = new StringContent(Serialize(data), Encoding.UTF8, "application/json")
+                Content = new StringContent(Serialize(data, HtmlLocalLinkParser), Encoding.UTF8, "application/json")
             };
 
         }

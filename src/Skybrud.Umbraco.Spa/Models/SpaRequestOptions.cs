@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Web;
+using Microsoft.AspNetCore.Http;
 using Skybrud.Essentials.Enums;
 using Skybrud.Essentials.Strings;
 using Skybrud.Essentials.Strings.Extensions;
+using static Umbraco.Cms.Core.Constants;
 
 namespace Skybrud.Umbraco.Spa.Models {
 
@@ -83,7 +86,7 @@ namespace Skybrud.Umbraco.Spa.Models {
         /// <summary>
         /// Gets a reference to the query string of the current SPA API request.
         /// </summary>
-        public NameValueCollection QueryString { get; set; }
+        public IQueryCollection Query { get; set; }
 
         /// <summary>
         /// Gets whether caching should be enabled for the current request.
@@ -130,39 +133,39 @@ namespace Skybrud.Umbraco.Spa.Models {
         /// </summary>
         /// <param name="context">A HTTP context.</param>
         /// <param name="helper">A current SPA request helper.</param>
-        public SpaRequestOptions(HttpContextBase context, SpaRequestHelper helper) {
+        public SpaRequestOptions(HttpContext context, SpaRequestHelper helper) {
 
             // Get a reference to the current request
-            HttpRequestBase r = context.Request;
+            HttpRequest r = context.Request;
             
             // Get the host name from the query
-            string appHost = r.QueryString["appHost"];
+            string appHost = r.Query["appHost"];
 
             // Get the protocol from the query
-            string appProtocol = r.QueryString["appProtocol"];
+            string appProtocol = r.Query["appProtocol"];
 
             // Use the current URL as fallback for "appHost" and "appProtocol"
-            HostName = string.IsNullOrWhiteSpace(appHost) ? r.Url?.Host : appHost;
-            Protocol = string.IsNullOrWhiteSpace(appProtocol) ? r.Url?.Scheme : appProtocol;
+            HostName = string.IsNullOrWhiteSpace(appHost) ? r.HttpContext.Request.Host.Host : appHost;
+            Protocol = string.IsNullOrWhiteSpace(appProtocol) ? r.HttpContext.Request.Scheme : appProtocol;
 
             // Parse the "navLevels" and "navContext" parameters from the query string
-            NavLevels = r.QueryString["navLevels"].ToInt32(1);
-            NavContext = StringUtils.ParseBoolean(r.QueryString["navContext"]);
+            NavLevels = r.Query["navLevels"].ToString().ToInt32(1);
+            NavContext = StringUtils.ParseBoolean(r.Query["navContext"]);
 
             // Parse the requests "parts"
-            Parts = GetParts(r.QueryString["parts"]);
+            Parts = GetParts(r.Query["parts"]);
 
             // Get the URL and URI of the requested page
-            Url = r.QueryString["url"];
+            Url = r.Query["url"];
             Uri = new Uri($"{Protocol}://{HostName}{Url}");
 
             // Parse the "siteId" and "pageId" parameters ("appSiteId" and "nodeId" are checked for legacy support)
-            SiteId = Math.Max(r.QueryString["siteId"].ToInt32(-1), r.QueryString["appSiteId"].ToInt32(-1));
-            PageId = Math.Max(r.QueryString["pageId"].ToInt32(-1), r.QueryString["nodeId"].ToInt32(-1));
+            SiteId = Math.Max(r.Query["siteId"].ToString().ToInt32(-1), r.Query["appSiteId"].ToString().ToInt32(-1));
+            PageId = Math.Max(r.Query["pageId"].ToString().ToInt32(-1), r.Query["nodeId"].ToString().ToInt32(-1));
 
-            QueryString = r.QueryString;
+            Query = r.Query;
 
-            Culture = r.QueryString["culture"];
+            Culture = r.Query["culture"];
 
             // Determine whether the current request is in debug mode
             if (helper.TryGetPreviewId(Url, out int previewId)) {
@@ -171,9 +174,9 @@ namespace Skybrud.Umbraco.Spa.Models {
             }
 
             // Determine whether caching should be enabled
-            EnableCaching = context.IsDebuggingEnabled == false && StringUtils.ParseBoolean(r.QueryString["cache"], true) && IsPreview == false;
+            EnableCaching = Debugger.IsAttached == false && StringUtils.ParseBoolean(r.Query["cache"], true) && IsPreview == false;
 
-            ShowHtmlErrors = context.IsDebuggingEnabled && context.IsCustomErrorEnabled == false && context.Request.Headers["Accept"].Contains("text/html");
+            ShowHtmlErrors = Debugger.IsAttached && context.Request.Headers["Accept"].ToString().Contains("text/html");
 
         }
 

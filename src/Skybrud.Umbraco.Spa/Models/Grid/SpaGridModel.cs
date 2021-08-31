@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using Skybrud.Umbraco.GridData.Models;
+using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using Skybrud.Umbraco.GridData;
 
-namespace Skybrud.Umbraco.Spa.Models.Grid {
+namespace Skybrud.Umbraco.Spa.Models.Grid
+{
 
     /// <summary>
     /// Class representing the overall grid mode.

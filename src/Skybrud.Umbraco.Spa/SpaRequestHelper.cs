@@ -1,25 +1,26 @@
-﻿using System;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text.RegularExpressions;
+﻿using Microsoft.Extensions.Logging;
 using Skybrud.Essentials.Strings.Extensions;
-using Skybrud.Umbraco.Redirects.Models;
+using Skybrud.Umbraco.Redirects.Services;
 using Skybrud.Umbraco.Spa.Exceptions;
 using Skybrud.Umbraco.Spa.Json.Converters;
 using Skybrud.Umbraco.Spa.Models;
 using Skybrud.Umbraco.Spa.Models.Flow;
 using Skybrud.Umbraco.Spa.Repositories;
-using Umbraco.Core;
-using Umbraco.Core.Cache;
-using Umbraco.Core.Logging;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Core.Services;
-using Umbraco.Web;
-using Umbraco.Web.Composing;
-using Umbraco.Web.PublishedCache;
+using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using Umbraco.Cms.Core.Cache;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.PublishedCache;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Templates;
+using Umbraco.Cms.Core.Web;
 
-namespace Skybrud.Umbraco.Spa  {
+namespace Skybrud.Umbraco.Spa
+{
 
     /// <summary>
     /// Helper class used for handling a SPA request.
@@ -31,7 +32,7 @@ namespace Skybrud.Umbraco.Spa  {
         /// <summary>
         /// Gets a reference to the current Umbraco context.
         /// </summary>
-        protected UmbracoContext UmbracoContext { get; }
+        protected IUmbracoContext UmbracoContext { get; }
 
         /// <summary>
         /// Gets a reference to Umbraco's service context.
@@ -86,15 +87,15 @@ namespace Skybrud.Umbraco.Spa  {
         /// <summary>
         /// Initializes a new helper instance.
         /// </summary>
-        protected SpaRequestHelper() {
-            UmbracoContext = Current.UmbracoContext;
-            RedirectsService = Current.Factory.GetInstance<IRedirectsService>();
-            Services = Current.Services;
-            AppCaches = Current.AppCaches;
-            Logger = Current.Logger;
-            VariationContextAccessor = Current.VariationContextAccessor;
-            PublishedSnapshot = Current.PublishedSnapshot;
-            DomainRepository = Current.Factory.GetInstance<SpaDomainRepository>();
+        protected SpaRequestHelper(IUmbracoContext umbracoContext, IRedirectsService redirectsService, ServiceContext serviceContext, AppCaches appCaches, ILogger logger, IVariationContextAccessor variationContextAccessor, IPublishedSnapshot publishedSnapshot, SpaDomainRepository spaDomainRepository) {
+            UmbracoContext = umbracoContext;
+            RedirectsService = redirectsService;
+            Services = serviceContext;
+            AppCaches = appCaches;
+            Logger = logger;
+            VariationContextAccessor = variationContextAccessor;
+            PublishedSnapshot = publishedSnapshot;
+            DomainRepository = spaDomainRepository;
             OverwriteStatusCodes = true;
         }
 
@@ -172,7 +173,7 @@ namespace Skybrud.Umbraco.Spa  {
         /// </summary>
         /// <param name="request">The current SPA request.</param>
         /// <returns>The response.</returns>
-        public virtual HttpResponseMessage GetResponse(SpaRequest request) {
+        public virtual HttpResponseMessage GetResponse(SpaRequest request, HtmlLocalLinkParser htmlLocalLinkParser) {
 
             try {
                 
@@ -242,26 +243,26 @@ namespace Skybrud.Umbraco.Spa  {
 
             if (exception is SpaActionException ex) {
 
-                Logger.Error<SpaRequestHelper>(
+                Logger.LogError(
                     exception, "SPA request for scheme {Scheme}, domain {Domain} and URL {Url} failed. Action was {Action}.",
-                    request.HttpContext.Request.Url?.Scheme,
-                    request.HttpContext.Request.Url?.Host,
-                    request.HttpContext.Request.RawUrl,
+                    request.HttpContext.Request.Scheme,
+                    request.HttpContext.Request.Host.Host,
+                    request.HttpContext.Request.Path.Value,
                     ex.MethodName
                 );
 
             } else {
 
-                Logger.Error<SpaRequestHelper>(
+                Logger.LogError(
                     exception, "SPA request for scheme {Scheme}, domain {Domain} and URL {Url} failed.",
-                    request.HttpContext.Request.Url?.Scheme,
-                    request.HttpContext.Request.Url?.Host,
-                    request.HttpContext.Request.RawUrl
+                    request.HttpContext.Request.Scheme,
+                    request.HttpContext.Request.Host.Host,
+                    request.HttpContext.Request.Path.Value
                 );
 
             }
 
-            if (request.HttpContext.IsDebuggingEnabled && (request.HttpContext.Request.AcceptTypes?.Contains("text/html") ?? false)) {
+            if (Debugger.IsAttached && (request.HttpContext.Request.Headers.TryGetValue("Accept", out var value) && value.Contains("text/html"))) {
                 return ReturnHtmlError(request, exception);
             }
 

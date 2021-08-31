@@ -1,22 +1,22 @@
-﻿using Skybrud.Umbraco.Spa.Components;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Skybrud.Umbraco.Spa.Repositories;
 using Skybrud.Umbraco.Spa.Services;
-using Umbraco.Core;
-using Umbraco.Core.Composing;
+using Umbraco.Cms.Core.Composing;
+using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Extensions;
 
 #pragma warning disable 1591
 
-namespace Skybrud.Umbraco.Spa.Composers {
+namespace Skybrud.Umbraco.Spa.Composers
+{
 
-    [RuntimeLevel(MinLevel = RuntimeLevel.Run)]
-    public class SpaComposer : IUserComposer {
+    public class SpaComposer : IComposer {
 
-        public void Compose(Composition composition) {
-            composition.Register<ISpaCacheService, SpaCacheService>();
-            composition.Register<SpaDomainRepository>();
-            composition.Components().Append<SpaCacheComponent>();
+        public void Compose(IUmbracoBuilder builder)
+        {
+            builder.Services.AddSingleton<ISpaCacheService, SpaCacheService>();
+            builder.Services.AddUnique<SpaDomainRepository>();
         }
-
     }
 
 }
