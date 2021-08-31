@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <RootNamespace>Skybrud.Umbraco.Spa</RootNamespace>
-    <Version>4.0.0-alpha001</Version>
+    <Version>4.0.0-alpha002</Version>
     <Company>Skybrud.dk a/s</Company>
     <Product>Skybrud.Umbraco.Spa</Product>
     <Authors>Anders Bjerner</Authors>

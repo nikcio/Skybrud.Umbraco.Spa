@@ -87,14 +87,20 @@ namespace Skybrud.Umbraco.Spa
         /// <summary>
         /// Initializes a new helper instance.
         /// </summary>
-        protected SpaRequestHelper(IUmbracoContext umbracoContext, IRedirectsService redirectsService, ServiceContext serviceContext, AppCaches appCaches, ILogger logger, IVariationContextAccessor variationContextAccessor, IPublishedSnapshot publishedSnapshot, SpaDomainRepository spaDomainRepository) {
-            UmbracoContext = umbracoContext;
+        protected SpaRequestHelper(IUmbracoContextAccessor umbracoContext, IRedirectsService redirectsService, ServiceContext serviceContext, AppCaches appCaches, ILogger logger, IVariationContextAccessor variationContextAccessor, IPublishedSnapshotAccessor publishedSnapshot, SpaDomainRepository spaDomainRepository) {
+            if(umbracoContext.TryGetUmbracoContext(out var context))
+            {
+                UmbracoContext = context;
+            }
             RedirectsService = redirectsService;
             Services = serviceContext;
             AppCaches = appCaches;
             Logger = logger;
             VariationContextAccessor = variationContextAccessor;
-            PublishedSnapshot = publishedSnapshot;
+            if(publishedSnapshot.TryGetPublishedSnapshot(out var snapshot))
+            {
+                PublishedSnapshot = snapshot;
+            }
             DomainRepository = spaDomainRepository;
             OverwriteStatusCodes = true;
         }
